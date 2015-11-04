@@ -10,11 +10,21 @@ include_once "config.class.php";
 class DRedis
 {
 
+    /**
+     * @var object instance of DRedis
+     */
     private static $_instance;
 
+    /**
+     * @var array|null distributed redis clients
+     */
     private $redis_clients;
 
+    /**
+     * @var int the number of distributed redis clients
+     */
     private $redis_client_num;
+
 
     private function __construct()
     {
@@ -35,6 +45,15 @@ class DRedis
         }
     }
 
+    /**
+     * connect to redis server
+     * @param string $host  host of redis server
+     * @param int $port port of redis server
+     * @param int $db int db of redis server
+     * @param string $passwd string password of redis server
+     * @param int $timeout timeout when connecting to redis server
+     * @return bool|Redis redis instance
+     */
     private function connect($host, $port, $db = 0, $passwd = '', $timeout = 1)
     {
         try {
@@ -59,33 +78,60 @@ class DRedis
     }
 
 
+    /**
+     * forbid to clone the object
+     */
     public function __clone()
     {
         trigger_error("clone is not allow!", E_USER_ERROR);
     }
 
+    /**
+     * @return DRedis|object get the instance of DRedis
+     */
     public static function getInstance()
     {
-        if(empty(self::$_instance)) {
+        if (empty(self::$_instance)) {
             self::$_instance = new self();
         }
         return self::$_instance;
     }
 
+    /**
+     * @param $key string|int redis key to calculate the node of redis clients;
+     * @return bool|Redis a certain redis instance base on the key
+     */
     public function getRedisInstance($key)
     {
-        $node =$this->getRedisNode($key);
-        if($node !== false) {
+        $node = $this->getRedisNode($key);
+        if ($node !== false) {
             return isset($this->redis_clients[$node]) ? $this->redis_clients[$node] : false;
         }
         return false;
     }
 
-    public function getRedisClients() {
+    /**
+     * @return array|null get all redis clients
+     */
+    public function getRedisClients()
+    {
         return $this->redis_clients;
     }
 
-    public function getRedisNode($key) {
+    /**
+     * @return int get the number of redis clients
+     */
+    public function getRedisClientsNum()
+    {
+        return $this->redis_client_num;
+    }
+
+    /**
+     * @param $key string|int redis key to calculate the node of redis clients;
+     * @return bool|mixed  Redis a certain node of redis clients base on the key
+     */
+    public function getRedisNode($key)
+    {
 
         if (empty($this->redis_clients)) {
             var_dump($this->redis_clients);
@@ -109,6 +155,10 @@ class DRedis
 
 }
 
+/**
+ * Consistent hashing algorithm
+ * Class ConsistentHashAlgo
+ */
 class ConsistentHashAlgo
 {
 
