@@ -68,10 +68,11 @@ class DRedis
                 }
                 return $client;
             } else {
+                trigger_error("redis server went array!", E_ERROR);
                 return false;
             }
         } catch (Exception $e) {
-            echo "connect redis error";
+            trigger_error("redis server went array!", E_ERROR);
             return false;
         }
 
