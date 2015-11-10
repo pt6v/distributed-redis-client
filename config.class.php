@@ -17,7 +17,7 @@ class DistriRedisConfig
             'host' => '127.0.0.1', // server 1 host
             'port' => 6379, // server 1 port
             'passwd' => '', // if auth is essential , you need to specify the password.if not, use false or ''
-//            'db'=>0, // not essential, you can do select when get the instance of redis
+            'db'=>9, // not essential, you can do select when get the instance of redis
 //            'timeout'=>1, // connect to redis timeout
         ),
         /**
@@ -27,6 +27,7 @@ class DistriRedisConfig
             'host' => '127.0.0.1', // server 1 host
             'port' => 6380, // server 1 port
             'passwd' => '', // if auth is essential , you need to specify the password.if not, use false or ''
+            'db'=>9,
         ),
         // ... ...
     );

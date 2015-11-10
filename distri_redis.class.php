@@ -34,7 +34,7 @@ class DRedis
                 $client_host = isset($server_config['host']) ? trim($server_config['host']) : '';
                 $client_port = isset($server_config['port']) ? intval($server_config['port']) : 6379;
                 $client_db = isset($server_config['db']) ? intval($server_config['db']) : 0;
-                $client_passwd = isset($server_config['passwd']) ? trim($server_config['passed']) : '';
+                $client_passwd = isset($server_config['passwd']) ? trim($server_config['passwd']) : '';
                 $timeout = isset($server_config['timeout']) ? intval($server_config['timeout']) : 1;
                 $client = $this->connect($client_host, $client_port, $client_db, $client_passwd, $timeout);
 
@@ -58,6 +58,7 @@ class DRedis
     {
         try {
             $client = new Redis();
+
             if ($client->connect($host, $port, $timeout)) {
                 if (!empty($passwd)) {
                     $client->auth($passwd);
@@ -68,11 +69,11 @@ class DRedis
                 }
                 return $client;
             } else {
-                trigger_error("redis server went array!", E_ERROR);
+                trigger_error("redis server went array!$host:$port-$db-$passwd", E_USER_ERROR);
                 return false;
             }
         } catch (Exception $e) {
-            trigger_error("redis server went array!", E_ERROR);
+            trigger_error("redis server went array!$host:$port-$db-$passwd", E_USER_ERROR);
             return false;
         }
 
