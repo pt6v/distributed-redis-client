@@ -26,6 +26,9 @@ class DRedis
     private $redis_client_num;
 
 
+    /**
+     * constructor of distri_redis, declare private, can't be Instanced
+     */
     private function __construct()
     {
         if (!empty(DistriRedisConfig::$REDIS_SERVERS)) {
