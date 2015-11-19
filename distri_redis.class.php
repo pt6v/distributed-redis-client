@@ -139,7 +139,6 @@ class DRedis
     {
 
         if (empty($this->redis_clients)) {
-            var_dump($this->redis_clients);
 
             return false;
         }
