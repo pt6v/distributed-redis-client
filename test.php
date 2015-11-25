@@ -37,12 +37,12 @@ $redis_client = new Redis();
 $redis_client->connect("127.0.0.1", 6379, 1);
 
 $redis_client->select(1);
-$pip_redis = new PipeRedis($redis_client);
-//$a = $pip_redis->pipGet(array(
-//    'a1',
-//    'a2',
-//    'a3',
-//    'a4',
-//));
-$a = $pip_redis->pipHGet(array('k1'=>array('f1','f2', 'f3'),'k2'=>array('f1','f2','f3')));
+$pip_redis = new PipRedis($redis_client);
+$a = $pip_redis->pipMGet(array(
+    'a1',
+    'a2',
+    'a3',
+    'a4',
+));
+$a = $pip_redis->pipHMGet(array('k1'=>array('f1','f2', 'f3'),'k2'=>array('f1','f2','f3')));
 var_dump($a);

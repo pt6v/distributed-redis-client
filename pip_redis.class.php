@@ -16,7 +16,7 @@ class PipRedis
         $this->redis_client = $redis_client;
     }
 
-    public function pipGet(Array $keys)
+    public function pipMGet(Array $keys)
     {
         if ($this->redis_client instanceof Redis) {
 
