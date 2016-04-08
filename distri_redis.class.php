@@ -6,6 +6,7 @@
  * Time: 17:42
  */
 include_once "config.class.php";
+include_once "pip_redis.class.php";
 
 class DRedis
 {
@@ -50,7 +51,7 @@ class DRedis
 
     /**
      * connect to redis server
-     * @param string $host  host of redis server
+     * @param string $host host of redis server
      * @param int $port port of redis server
      * @param int $db int db of redis server
      * @param string $passwd string password of redis server
@@ -154,6 +155,217 @@ class DRedis
         } else {
             return false;
         }
+    }
+
+    public function mGet(Array $keys, $sort = false)
+    {
+
+        if (empty($this->redis_clients)) {
+            return false;
+        }
+
+        $key_distri_map = array();
+
+        foreach ($keys as $key) {
+            $node = $this->getRedisNode($key);
+
+            if ($node === false) {
+                continue;
+            }
+
+            $key_distri_map[$node][] = $key;
+        }
+
+        $kv = array();
+
+        foreach ($key_distri_map as $node => $node_keys) {
+            if (!empty($this->redis_clients[$node])) {
+                $redis_client = $this->redis_clients[$node];
+                $pip_redis_client = new PipRedis($redis_client);
+                $node_kv = $pip_redis_client->pipMGet($node_keys);
+                if (!empty($node_kv) && is_array($node_kv)) {
+                    $kv = array_merge($kv, $node_kv);
+                }
+            }
+
+        }
+
+        if ($sort) {
+
+            $sorted_kv = array();
+
+            foreach ($keys as $key) {
+                $sorted_kv[$key] = isset($kv[$key]) ? $kv[$key] : false;
+            }
+
+            $kv = $sorted_kv;
+        }
+
+        return $kv;
+
+    }
+
+    /**
+     * @param array $key_fields format
+     *Array
+     *  (
+     *      [k_0] => Array
+     *      (
+     *          [0] => f17
+     *          [1] => f19
+     *      )
+     *
+     *      [k_1] => Array
+     *      (
+     *          [0] => f17
+     *          [1] => f18
+     *      )
+     *
+     *      ....
+     *
+     *      [{key}]=>Array
+     *      (
+     *           [0] => {field1}
+     *           [0] => {field2}
+     *      )
+     *
+     *  )
+     *
+     *
+     * @return array|bool format
+     * Array
+     *      (
+     *          [k_0] => Array
+     *          (
+     *              [f17] => k_0~f17
+     *              [f19] => k_0~f19
+     *          )
+     *
+     *          [k_1] => Array
+     *          (
+     *              [f17] => k_1~f17
+     *              [f18] => k_1~f18
+     *          )
+     *
+     *          ......
+     *
+     *          [{key}] => Array
+     *          (
+     *               [{field1}] => [{value1}]
+     *               [{field2}] => [{value2}]
+     *          )
+     *
+     *      )
+     */
+    public function hMGetDistriByField(Array $key_fields)
+    {
+        $node_key_field = array();
+
+        $field_node = array();
+
+        foreach ($key_fields as $key => $fields) {
+            foreach ($fields as $field) {
+                if (isset($field_node[$field])) {
+                    $node = $field_node[$field];
+                } else {
+                    $node = $this->getRedisNode($field);
+                    $field_node[$field] = $node;
+                }
+
+                if ($node !== false) {
+                    $node_key_field[$node][$key][] = $field;
+                }
+            }
+        }
+
+        if (!empty($node_key_field)) {
+            $redis_clients = DRedis::getInstance()->getRedisClients();
+
+            $result = array();
+
+            if (is_array($node_key_field)) {
+                foreach ($node_key_field as $_node => $_key_field) {
+                    if (!empty($redis_clients[$_node])) {
+                        $redis_client = $redis_clients[$_node];
+                        $pip_redis_client = new PipRedis($redis_client);
+                        $key_fields_values = $pip_redis_client->pipHMGet($_key_field);
+
+                        if (is_array($key_fields_values)) {
+                            foreach ($key_fields_values as $key => $field_value) {
+                                if (empty($result[$key])) {
+                                    $result[$key] = array();
+                                }
+                                if (!empty($field_value)) {
+                                    $result[$key] = $result[$key] + $field_value;
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+            return $result;
+        } else {
+            return false;
+        }
+    }
+
+
+    /**
+     * @param array $key_fields format
+     *Array
+     *  (
+     *      [k_0] => Array
+     *      (
+     *          [0] => f17
+     *          [1] => f19
+     *      )
+     *
+     *      [k_1] => Array
+     *      (
+     *          [0] => f17
+     *          [1] => f18
+     *      )
+     *
+     *      ....
+     *
+     *      [{key}]=>Array
+     *      (
+     *           [0] => {field1}
+     *           [0] => {field2}
+     *      )
+     *
+     *  )
+     *
+     *
+     * @return array|bool format
+     * Array
+     *      (
+     *          [k_0] => Array
+     *          (
+     *              [f17] => k_0~f17
+     *              [f19] => k_0~f19
+     *          )
+     *
+     *          [k_1] => Array
+     *          (
+     *              [f17] => k_1~f17
+     *              [f18] => k_1~f18
+     *          )
+     *
+     *          ......
+     *
+     *          [{key}] => Array
+     *          (
+     *               [{field1}] => [{value1}]
+     *               [{field2}] => [{value2}]
+     *          )
+     *
+     *      )
+     */
+    public function hMGet(Array $key_fields)
+    {
+
     }
 
 
